@@ -1,0 +1,37 @@
+<form class="layui-form layui-box" style='padding:25px 30px 20px 0' action="{:url()}" data-auto="true" method="post">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">任务名称</label>
+        <div class="layui-input-block">
+            {if $vo and isset($vo.title)}
+            <input type="text" readonly="" disabled="" name="title" value='{$vo.title|default=""}' required="required" title="请输入任务名称" placeholder="请输入任务名称" class="layui-input disabled">
+            {else/}
+            <input type="text" name="title" value='{$vo.title|default=""}' required="required" title="请输入任务名称" placeholder="请输入任务名称" class="layui-input">
+            {/if}
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">产品链接</label>
+        <div class="layui-input-block">
+            <input type="text" name="url" value='{$vo.url|default=""}' required="required" title="请输入产品链接" placeholder="请输入产品链接" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">目标价格</label>
+        <div class="layui-input-block">
+            <input type="text" name="goal_price" value='{$vo.goal_price|default=""}' required="required" title="请输入目标价格" placeholder="请输入目标价格" class="layui-input">
+        </div>
+    </div>
+
+    <div class="hr-line-dashed"></div>
+
+    <div class="layui-form-item text-center">
+        {if isset($vo['id'])}<input type='hidden' value='{$vo.id}' name='id'/>{/if}
+        <button class="layui-btn" type='submit'>保存数据</button>
+        <button class="layui-btn layui-btn-danger" type='button' data-confirm="确定要取消编辑吗？" data-close>取消编辑</button>
+    </div>
+
+    <script>window.form.render();</script>
+</form>
