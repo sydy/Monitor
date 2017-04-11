@@ -170,6 +170,8 @@ class BasicAdmin extends Controller {
             $vo = array_merge($data, (array)$db->find());
         }
         $this->_callback('_form_filter', $vo);
+        // print_r($vo);
+        // exit;
         $this->assign('vo', $vo);
         empty($this->title) or $this->assign('title', $this->title);
         return is_null($tpl) ? $vo : $this->fetch($tpl);

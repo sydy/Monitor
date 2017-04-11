@@ -12,11 +12,18 @@
 
 <!-- 表单搜索 开始 -->
 <form class="animated form-search" action="{:request()->url(true)}" onsubmit="return false" method="get" data-search>
-
     <div class="row">
         <div class="col-xs-3">
             <div class="form-group">
-                <input type="text" name="title" value="{$Think.get.title|default=''}" placeholder="名称"
+                <input type="text" name="site_title" value="{$Think.get.site_title|default=''}" placeholder="站点名"
+                       class="input-sm form-control">
+            </div>
+        </div>
+        
+    <div class="row">
+        <div class="col-xs-3">
+            <div class="form-group">
+                <input type="text" name="task_title" value="{$Think.get.task_title|default=''}" placeholder="任务名"
                        class="input-sm form-control">
             </div>
         </div>

@@ -24,7 +24,26 @@
             <input type="text" name="goal_price" value='{$vo.goal_price|default=""}' required="required" title="请输入目标价格" placeholder="请输入目标价格" class="layui-input">
         </div>
     </div>
-
+    
+    <div class="layui-form-item">
+    	<label class="layui-form-label">检查周期</label>
+    	<div class="layui-inline" style="width:319px;">
+            <select id="run_cycle_select" class="layui-select full-width" lay-filter="run_cycle">
+            	<option selected value=''>请选择多长时间检查一次</option>
+                <option {if isset($vo.run_cycle)}selected{/if} value="{$vo.run_cycle|default=""}">自定义</option>
+                <option {if isset($vo.run_cycle) and $vo.run_cycle == '300'}selected{/if} value="300">五分钟</option>
+                <option {if isset($vo.run_cycle) and $vo.run_cycle == '600'}selected{/if} value='600'>十分钟</option>
+                <option {if isset($vo.run_cycle) and $vo.run_cycle == '1200'}selected{/if} value='1200'>二十分钟</option>
+                <option {if isset($vo.run_cycle) and $vo.run_cycle == '1800'}selected{/if} value='1800'>三十分钟</option>
+                <option {if isset($vo.run_cycle) and $vo.run_cycle == '3600'}selected{/if} value='3600'>一小时</option>
+                <option {if isset($vo.run_cycle) and $vo.run_cycle == '21600'}selected{/if} value='21600'>六小时</option>
+            </select>
+        </div>
+        <div class="layui-inline" style="width:310px;margin-right: 0px;">
+        	<input type="text" id="run_cycle" name="run_cycle" value='{$vo.run_cycle|default=""}' required="required" title="周期时间(秒)" placeholder="周期时间(秒)" class="layui-input">
+        </div>
+    </div>
+    
     <div class="hr-line-dashed"></div>
 
     <div class="layui-form-item text-center">
@@ -32,6 +51,10 @@
         <button class="layui-btn" type='submit'>保存数据</button>
         <button class="layui-btn layui-btn-danger" type='button' data-confirm="确定要取消编辑吗？" data-close>取消编辑</button>
     </div>
-
     <script>window.form.render();</script>
 </form>
+<script>
+form.on('select(run_cycle)', function(data){
+  $("#run_cycle").val(data.value);
+});
+</script>

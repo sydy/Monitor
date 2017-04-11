@@ -22,15 +22,23 @@ class Log extends BasicAdmin {
     public function index() {
         // 设置页面标题
         $this->title = '监控任务日志列表';
+        // 指定用户ID
+        $search['uid'] = session('user.id');
         // 获取到所有GET参数
         $get = $this->request->get();
-        // 实例Query对象
-        $task_id = Db::name('MonitorTask')->where('uid', session('user.id'))->column('id');
-        $db = Db::name($this->table)->whereIn('task_id', $task_id);
         // 应用搜索条件
-        if (isset($get['title']) && $get['title'] !== '') {
-            $db->where('title', 'like', "%{$get['title']}%");
+        if (isset($get['site_title']) && $get['site_title'] !== '') {
+            $site_id = Db::name('MonitorSite')->where('title', $get['site_title'])->value('id');
+            if (!empty($site_id)) {
+                $search['site_id'] = $site_id;
+            }
         }
+        if (isset($get['task_title']) && $get['task_title'] !== '') {
+            $search['title'] = $get['task_title'];
+        }
+        // 实例Query对象
+        $task_id = Db::name('MonitorTask')->where($search)->column('id');
+        $db = Db::name($this->table)->whereIn('task_id', $task_id)->order('run_time desc');
         // 实例化并显示
         parent::_list($db);
     }
@@ -51,9 +59,9 @@ class Log extends BasicAdmin {
      */
     public function del() {
         if (DataService::update($this->table)) {
-            $this->success("用户删除成功！", '');
+            $this->success("日志删除成功！", '');
         } else {
-            $this->error("用户删除失败，请稍候再试！");
+            $this->error("日志删除失败，请稍候再试！");
         }
     }
 
