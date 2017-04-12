@@ -3,11 +3,7 @@
     <div class="layui-form-item">
         <label class="layui-form-label">任务名称</label>
         <div class="layui-input-block">
-            {if $vo and isset($vo.title)}
-            <input type="text" readonly="" disabled="" name="title" value='{$vo.title|default=""}' required="required" title="请输入任务名称" placeholder="请输入任务名称" class="layui-input disabled">
-            {else/}
-            <input type="text" name="title" value='{$vo.title|default=""}' required="required" title="请输入任务名称" placeholder="请输入任务名称" class="layui-input">
-            {/if}
+            <input type="text" name="name" value='{$vo.name|default=""}' required="required" title="请输入任务名称" placeholder="请输入任务名称" class="layui-input">
         </div>
     </div>
 
@@ -44,6 +40,13 @@
         </div>
     </div>
     
+    <div class="layui-form-item">
+        <label class="layui-form-label">通知手机号码</label>
+        <div class="layui-input-block">
+            <input  type="tel" autofocus name="phone" value='{$vo.phone|default=$default_phone}' pattern="^1[3-9][0-9]{9}$" required="required" title="请输接收通知的手机号码" placeholder="请输接收通知的手机号码" class="layui-input">
+        </div>
+    </div>
+
     <div class="hr-line-dashed"></div>
 
     <div class="layui-form-item text-center">

@@ -26,8 +26,8 @@ class Task extends BasicCrond
         $data = $this->contentToCoding( $content, $site['return_type'] );
     	//处理过滤规则
         $data = $this->siteRule( $site_rule, $data );
-        //价格对比
-        $new_price = $data['price']-$task['start_price'];
+        //价格检查
+        $check_price = ($data['price'] <= $task['goal_price']) ? true : false ;
         //保存运行日志
         Db::name('MonitorTaskLog')
             ->insert([
@@ -36,10 +36,18 @@ class Task extends BasicCrond
                 'online_price' => $data['price'],
                 'run_time'     => date('Y-m-d H:i:s',time())
             ]);
+        //价格变化了
+        //发送短信提醒
+        if ($check_price===true) {
+            if (empty($task['phone'])) {
+                $phone = $task['phone'];
+            } else {
+                $phone = Db::name('SystemUser')->where(['id' => $task['uid']])->value('phone');
+            }
+            parent::curlWeb(parent::sendSMS($task['name'],$phone));
+        }
         //更新任务时间
-        $this->updateRunTime($id);
-        // $this->assign('result', $data);
-        // return $this->fetch();
+        $this->updateRunTime($id,$data['price'],$check_price);
     }
 
     /**
@@ -59,6 +67,22 @@ class Task extends BasicCrond
         //处理过滤规则
         $data = $this->siteRule( $site_rule, $data );
         return $data;
+    }
+
+    /**
+     * 获取页面标题
+     * @param  string $url 产品页面地址
+     * @return [type]      标题名称
+     */
+    public function getTitle($url='')
+    {
+        //获取页面内容
+        $content = parent::curlWeb($url);
+        preg_match("/<title>(.+)<\/title>/", $content, $matches);
+        $title = $matches[1];
+        $encode = mb_detect_encoding($title);
+        $title = iconv($encode,"UTF-8//IGNORE",$title);
+        return $title;
     }
 
     /**
@@ -130,20 +154,34 @@ class Task extends BasicCrond
     /**
      * 更新运行时间
      * @param  string $id 任务编号
+     * @param  string $price 当前售价
+     * @param  boolean $check_price 对比后价格状态
      * @return [type]     不返回任何信息
      */
-    public function updateRunTime($id='')
+    public function updateRunTime($id='',$price='',$check_price=false)
     {   
         //运行周期（秒）
         $run_cycle = Db::name('MonitorTask')->where('id', $id)->value('run_cycle');
         //删除旧数据
         Db::name('MonitorCron')->where('task_id', $id)->delete();
-        //下次运行时间戳
-        $expires_in = time() + $run_cycle;
-        //创建新的下次运行记录
-        Db::name('MonitorCron')->insert(['task_id' => $id, 'expires_in' => $expires_in]);
-        //保存最新运行时间
-        Db::name('MonitorTask')->where('id', $id)->update(['run_time' => date('Y-m-d H:i:s',time())]);
+        //更新任务内容
+        $task_date['run_time'] = date('Y-m-d H:i:s',time());
+        if (empty($price)) {
+            $task_date['current_price'] = $price;
+        }
+        if ($check_price===false) {
+            //下次运行时间戳
+            $expires_in = time() + $run_cycle;
+            //创建新的下次运行记录
+            Db::name('MonitorCron')->insert(['task_id' => $id, 'expires_in' => $expires_in]);
+            //保存最新运行时间
+            Db::name('MonitorTask')->where('id', $id)->update($task_date);
+        } else {
+            //禁用产品
+            $task_date['is_disable'] = 2;
+            Db::name('MonitorTask')->where('id', $id)->update($task_date);
+        }
+
     }
 
 }

@@ -43,7 +43,7 @@
             </th>
             <th class='text-center'>站点名称</th>
             <th class='text-center'>任务名称</th>
-            <th class='text-center'>产品链接</th>
+            <th class='text-center'>产品名称</th>
             <th class='text-center'>起始价</th>
             <th class='text-center'>当前价</th>
             <th class='text-center'>目标价</th>
@@ -59,8 +59,8 @@
                 <input class="list-check-box" value='{$vo.id}' type='checkbox'/>
             </td>
             <td class='text-center'>{$vo.site_name}</td>
-            <td class='text-center'>{$vo.title}</td>
-            <td class='text-center'>{$vo.param}</td>
+            <td class='text-center'>{$vo.name}</td>
+            <td class='text-center'>{$vo.title|mb_substr=0,30,"utf-8"}..</td>
             <td class='text-center'>{$vo.start_price}</td>
             <td class='text-center'>{$vo.current_price}</td>
             <td class='text-center'>{$vo.goal_price}</td>

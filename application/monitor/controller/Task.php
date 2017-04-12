@@ -65,16 +65,28 @@ class Task extends BasicAdmin {
     public function _form_filter(&$data) {
         if ($this->request->isPost()) {
 
-            if (isset($data['run_cycle']) && $data['run_cycle']<60) {
+            if (!(strlen($data['name'])>=1 && strlen($data['name'])<=20)) {
+                $this->error('任务名称不能超过20字,小于1字！');
+            }
+
+            if ($data['run_cycle']<60) {
                 $this->error('检查周期时间不能小于一分钟！');
             }
 
-            if (isset($data['run_cycle']) && $data['run_cycle']>2678400) {
+            if ($data['run_cycle']>2678400) {
                 $this->error('检查周期时间不能超过一个月！');
             }
 
             if (isset($data['url'])) {
+                if (empty($data['id'])) {
+                    if (Db::name($this->table)->where(['uid' => session('user.id'), 'url' => $data['url']])->count()) {
+                        $this->error('当前产品已在监控队列！');
+                    }
+                }
                 preg_match("/^(http:\/\/)?(https:\/\/)?(.+)(\/)/i", $data['url'], $matches);
+                if (empty($matches[3])) {
+                    $this->error('链接错误，请检查后重试！');
+                }
                 $site_web = Db::name('MonitorSiteWeb')->where('url', $matches[3])->find();
                 if (empty($site_web)) {
                     $this->error('当前站点未设置！');
@@ -83,31 +95,45 @@ class Task extends BasicAdmin {
                 if (empty($matches[2])) {
                     $this->error('产品链接格式无法识别！');
                 }
-                $html_data = action('Crond/Task/check', ['site_id' => $site_web['site_id'], 'param' => $matches['2']]);
+                $html_data = action('crond/Task/check', ['site_id' => $site_web['site_id'], 'param' => $matches['2']]);
+
                 if (!empty($html_data['price'])) {
                     $data['start_price'] = $html_data['price'];
                 } else {
                     $this->error('当前产品无法监控价格！');
                 }
+                if ($html_data['price'] < $data['goal_price']) {
+                    $this->error('当前售价低于目标价格！');
+                }
+                //获取产品标题
+                $data['title'] = action('crond/Task/getTitle', ['url' => $data['url']]);
             } else {
                 $this->error('请填写产品链接！');
             }
-            if (!empty($data['title'])) {
-                $id = Db::name($this->table)->where(['site_id' => $site_web['site_id'], 'title' => $data['title']])->value('id');
-                if (!empty($id)) {
-                    $this->error('短标题重复，请换个名称！');
-                }
-            } else {
-                $this->error('请填写短标题！');
-            }
-
+            Db::name($this->table);
+            //补充字段
             $data['param']       = $matches['2'];
             $data['site_id']     = $site_web['site_id'];
-            $data['uid']         = session('user.id');
-            $data['create_time'] = date('Y-m-d H:i:s',time());
+            if (empty($data['id'])) {
+                $data['uid']         = session('user.id');
+                $data['create_time'] = date('Y-m-d H:i:s',time());
+            }
  
         } else {
- 
+            $this->assign('default_phone', Db::name('SystemUser')->where(['id' => session('user.id')])->value('phone'));
+        }
+    }
+
+    /**
+     * 保存表单后操作
+     * @param  [type] &$result 
+     */
+    public function _form_result(&$result) {
+        if ($result !== false) {
+            $taskId = Db::name($this->table)->getLastInsID();
+            if (isset($taskId)) {
+                action('crond/Cron/add', ['id' => $taskId]);
+            }
         }
     }
 
@@ -116,6 +142,10 @@ class Task extends BasicAdmin {
      */
     public function del() {
         if (DataService::update($this->table)) {
+            $ids = explode(',', input("post.id", ''));
+            foreach ($ids as $id) {
+                action('crond/Cron/del', ['id' => $id]);
+            }
             $this->success("任务删除成功！", '');
         } else {
             $this->error("任务删除失败，请稍候再试！");
@@ -127,6 +157,10 @@ class Task extends BasicAdmin {
      */
     public function forbid() {
         if (DataService::update($this->table)) {
+            $ids = explode(',', input("post.id", ''));
+            foreach ($ids as $id) {
+                action('crond/Cron/del', ['id' => $id]);
+            }
             $this->success("任务禁用成功！", '');
         } else {
             $this->error("任务禁用失败，请稍候再试！");
@@ -138,6 +172,10 @@ class Task extends BasicAdmin {
      */
     public function resume() {
         if (DataService::update($this->table)) {
+            $ids = explode(',', input("post.id", ''));
+            foreach ($ids as $id) {
+                action('crond/Cron/add', ['id' => $id]);
+            }
             $this->success("任务启用成功！", '');
         } else {
             $this->error("任务启用失败，请稍候再试！");
