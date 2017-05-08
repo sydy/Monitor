@@ -33,8 +33,13 @@ class Log extends BasicAdmin {
                 $search['site_id'] = $site_id;
             }
         }
+        
         if (isset($get['task_title']) && $get['task_title'] !== '') {
             $search['title'] = $get['task_title'];
+        }
+
+        if (isset($get['id']) && $get['id'] !== '') {
+            $search['id'] = $get['id'];
         }
         // 实例Query对象
         $task_id = Db::name('MonitorTask')->where($search)->column('id');

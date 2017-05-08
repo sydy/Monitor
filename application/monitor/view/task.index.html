@@ -44,7 +44,7 @@
             <th class='text-center'>站点名称</th>
             <th class='text-center'>任务名称</th>
             <th class='text-center'>产品名称</th>
-            <th class='text-center'>起始价</th>
+            <th class='text-center'>检查周期(时间)</th>
             <th class='text-center'>当前价</th>
             <th class='text-center'>目标价</th>
             <th class='text-center'>下次运行时间</th>
@@ -60,8 +60,8 @@
             </td>
             <td class='text-center'>{$vo.site_name}</td>
             <td class='text-center'>{$vo.name}</td>
-            <td class='text-center'>{$vo.title|mb_substr=0,30,"utf-8"}..</td>
-            <td class='text-center'>{$vo.start_price}</td>
+            <td class='text-center'>{$vo.title|mb_substr=0,25,"utf-8"}..</td>
+            <td class='text-center'>{$vo.run_cycle}</td>
             <td class='text-center'>{$vo.current_price}</td>
             <td class='text-center'>{$vo.goal_price}</td>
             <td class='text-center'>{$vo.run_time}</td>
@@ -75,7 +75,15 @@
             <td class='text-center nowrap'>
                 {if auth("$classuri/edit")}
                 <span class="text-explode">|</span>
-                <a data-modal='{:url("$classuri/edit")}?id={$vo.id}' href="javascript:void(0)">编辑</a>
+                <a data-modal='{:url("$classuri/edit")}?id={$vo.id}' href="javascript:void(0)">修改</a>
+                {/if}
+                {if auth("$classuri/check")}
+                <span class="text-explode">|</span>
+                <a data-modal='{:url("$classuri/check")}?id={$vo.id}' href="javascript:void(0)">检查</a>
+                {/if}
+                {if auth("monitor/log/index")}
+                <span class="text-explode">|</span>
+                <a data-open='{:url("monitor/log/index")}?id={$vo.id}' href="javascript:void(0)">日志</a>
                 {/if}
                 {if $vo.is_disable eq 0 and auth("$classuri/forbid")}
                 <span class="text-explode">|</span>

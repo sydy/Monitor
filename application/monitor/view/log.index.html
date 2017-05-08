@@ -59,7 +59,7 @@
                 <input class="list-check-box" value='{$vo.id}' type='checkbox'/>
             </td>
             <td class='text-center'>{$vo.task.site_name}</td>
-            <td class='text-center'>{$vo.task.title}</td>
+            <td class='text-center'>{$vo.task.name|mb_substr=0,50,"utf-8"}</td>
             <td class='text-center'>{$vo.online_price}</td>
             <td class='text-center'>{$vo.run_time}</td>
             <td class='text-center nowrap'>

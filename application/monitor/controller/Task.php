@@ -55,6 +55,7 @@ class Task extends BasicAdmin {
     protected function _index_data_filter(&$data) {
         foreach ($data as &$vo) {
             $vo['site_name'] = Db::name('MonitorSite')->where('id', $vo['site_id'])->value('title');
+            $vo['run_cycle'] = $this->sec2Time($vo['run_cycle']);
         }
     }
 
@@ -65,8 +66,8 @@ class Task extends BasicAdmin {
     public function _form_filter(&$data) {
         if ($this->request->isPost()) {
 
-            if (!(strlen($data['name'])>=1 && strlen($data['name'])<=20)) {
-                $this->error('任务名称不能超过20字,小于1字！');
+            if (!(strlen($data['name'])>=1 && strlen($data['name'])<=10)) {
+                $this->error('任务名称不能超过10字,小于1字！');
             }
 
             if ($data['run_cycle']<60) {
@@ -92,10 +93,13 @@ class Task extends BasicAdmin {
                     $this->error('当前站点未设置！');
                 }
                 preg_match($site_web['match_rule'], $data['url'], $matches);
-                if (empty($matches[2])) {
+                if (empty($matches[$site_web['match_rule_num']])) {
                     $this->error('产品链接格式无法识别！');
                 }
-                $html_data = action('crond/Task/check', ['site_id' => $site_web['site_id'], 'param' => $matches['2']]);
+                $html_data = action(
+                    'crond/Task/check', 
+                    ['url' => $data['url'], 'site_id' => $site_web['site_id'], 'param' => $matches[$site_web['match_rule_num']]]
+                );
 
                 if (!empty($html_data['price'])) {
                     $data['start_price'] = $html_data['price'];
@@ -103,10 +107,10 @@ class Task extends BasicAdmin {
                     $this->error('当前产品无法监控价格！');
                 }
                 if ($html_data['price'] < $data['goal_price']) {
-                    $this->error('当前售价低于目标价格！');
+                    $this->error('当前售价'.$html_data['price'].'低于目标价格！');
                 }
                 //获取产品标题
-                $data['title'] = action('crond/Task/getTitle', ['url' => $data['url']]);
+                $data['title'] = $html_data['title'];
             } else {
                 $this->error('请填写产品链接！');
             }
@@ -118,6 +122,8 @@ class Task extends BasicAdmin {
                 $data['uid']         = session('user.id');
                 $data['create_time'] = date('Y-m-d H:i:s',time());
             }
+            print_r($data);
+            exit;
  
         } else {
             $this->assign('default_phone', Db::name('SystemUser')->where(['id' => session('user.id')])->value('phone'));
@@ -182,4 +188,66 @@ class Task extends BasicAdmin {
         }
     }
 
+    /**
+     * 立即检查
+     */
+    public function check() {
+        $id = input('get.id');
+        $uid = Db::name($this->table)->where('id', $id)->value('uid');
+        if ($uid == session('user.id')) {
+            action('crond/Task/index', ['id' => $id]);
+            $this->success("检查成功！", '');
+        } else {
+            $this->error("检查失败，请稍候再试！");
+        }
+    }
+
+    /**
+     * 秒数转换为文本时间
+     * @return bool
+     */
+    public function sec2Time($time='60') {
+        if(is_numeric($time)){
+            $value = array(
+                "years" => 0, "days" => 0, "hours" => 0,
+                "minutes" => 0, "seconds" => 0,
+            );
+            if($time >= 31556926){
+                $value["years"] = floor($time/31556926);
+                $time = ($time%31556926);
+            }
+            if($time >= 86400){
+                $value["days"] = floor($time/86400);
+                $time = ($time%86400);
+            }
+            if($time >= 3600){
+                $value["hours"] = floor($time/3600);
+                $time = ($time%3600);
+            }
+            if($time >= 60){
+                $value["minutes"] = floor($time/60);
+                $time = ($time%60);
+            }
+            $value["seconds"] = floor($time);
+            $t = '';
+            if (!empty($value["years"])) {
+                $t .= $value["years"] ."年";
+            }
+            if (!empty($value["days"])) {
+                $t .= $value["days"] ."天";
+            }
+            if (!empty($value["hours"])) {
+                $t .= $value["hours"] ."小时";
+            }
+            if (!empty($value["minutes"])) {
+                $t .= $value["minutes"] ."分";
+            }
+            if (!empty($value["seconds"])) {
+                $t .= $value["seconds"]."秒";
+            }
+            return $t;
+        }else{
+            return false;
+        }
+    }
 }
